@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=int_ring
+#SBATCH --job-name=int_ring_bandwidth
 #SBATCH --nodes=3
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=2GB 
@@ -10,4 +10,4 @@
 module purge 
 module load openmpi/gcc/4.0.5 intel/19.1.2 openmpi/intel/4.0.5 
 
-mpiexec -np 3 ./int_ring 100
+mpiexec -np 3 ./int_ring_bandwidth 10

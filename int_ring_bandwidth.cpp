@@ -19,11 +19,13 @@ int main(int argc, char** argv) {
   MPI_Comm_size(comm, &size);
 
   // define the first message out
-  int message_out = 0;
-  int message_in;
+  int size_array = 2e6;
+  int* message_out = (int*) malloc(size_array);
+
+  //int message_out = 0;
+  //int message_in;
 
     // get hostname of process, for testing only
-    int mpisize;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     int name_len;
     MPI_Get_processor_name(processor_name, &name_len);
@@ -36,15 +38,16 @@ int main(int argc, char** argv) {
 
       if (rank == 0 ) {
     	// send the first one
-	message_out = message_out + rank;
+	//message_out = message_out + rank;
+	message_out = message_out;
 	int send_to_rank = 1;
-	MPI_Send(&message_out, 1, MPI_INT, send_to_rank, 999, MPI_COMM_WORLD);
+	MPI_Send(&message_out, size_array, MPI_INT, send_to_rank, 999, MPI_COMM_WORLD);
     
     	// then, receive it from previous 
-	int message_recv;
+	int* message_recv;
 	int receive_from_rank = size - 1;
 	MPI_Status status;
-	MPI_Recv(&message_recv, 1, MPI_INT, receive_from_rank, 999, MPI_COMM_WORLD, &status);
+	MPI_Recv(&message_recv, size_array, MPI_INT, receive_from_rank, 999, MPI_COMM_WORLD, &status);
     	// printf("Iter:%d, Rank %d, Received message is %d\n", n, rank, message_recv);
 	message_out = message_recv;
       }
@@ -53,16 +56,17 @@ int main(int argc, char** argv) {
       
       	if ( rank < (size - 1) ) {
 	 // regular iteration, pass the value to the next one
-	 int message_recv;
+	 int* message_recv;
 	 int receive_from_rank = rank - 1;
 	 MPI_Status status;
-         MPI_Recv(&message_recv, 1, MPI_INT, receive_from_rank, 999, MPI_COMM_WORLD, &status);
+         MPI_Recv(&message_recv, size_array, MPI_INT, receive_from_rank, 999, MPI_COMM_WORLD, &status);
          // printf("Iter:%d, Rank %d, Received message is %d\n", n, rank, message_recv);
 
 	 // send 
-	 message_out = message_recv + rank;
+	 // message_out = message_recv + rank;
+	 message_out = message_out;
 	 int send_to_rank = rank + 1;
-	 MPI_Send(&message_out, 1, MPI_INT, send_to_rank, 999, MPI_COMM_WORLD);
+	 MPI_Send(&message_out, size_array, MPI_INT, send_to_rank, 999, MPI_COMM_WORLD);
         } 
 
        else if ( rank == (size - 1) ) {
@@ -70,14 +74,15 @@ int main(int argc, char** argv) {
 	 int message_recv;
          int receive_from_rank = rank - 1;
          MPI_Status status;
-         MPI_Recv(&message_recv, 1, MPI_INT, receive_from_rank, 999, MPI_COMM_WORLD, &status);
+         MPI_Recv(&message_recv, size_array, MPI_INT, receive_from_rank, 999, MPI_COMM_WORLD, &status);
          // printf("Iter:%d, Rank %d, Received message is %d\n", n, rank, message_recv); 
 	
 	
 	 // send to 0
-         message_out = message_recv + rank;
+         //message_out = message_recv + rank;
+	 message_out = message_out;
          int send_to_rank = 0;
-         MPI_Send(&message_out, 1, MPI_INT, send_to_rank, 999, MPI_COMM_WORLD);	
+         MPI_Send(&message_out, size_array, MPI_INT, send_to_rank, 999, MPI_COMM_WORLD);	
        }
 
       } 
@@ -90,8 +95,8 @@ int main(int argc, char** argv) {
    tt = MPI_Wtime() - tt;
 
    if (!rank) {
-  	printf("Int ring latency: %e ms \n", tt/N * 1000);	   
-  	printf("result: %d \n", message_out);
+  	printf("Int ring bandwidth: %e GB/s \n", (size_array*N)/tt/1e9 * 1000);	   
+  	// printf("result: %d \n", message_out);
    }
 
   MPI_Finalize();
