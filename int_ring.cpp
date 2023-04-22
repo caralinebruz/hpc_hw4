@@ -6,9 +6,9 @@ int main(int argc, char** argv) {
   MPI_Init(&argc, &argv);
   MPI_Comm comm = MPI_COMM_WORLD;
 
-  int rank, mpisize;
+  int rank, size;
   MPI_Comm_rank(comm, &rank);
-  MPI_Comm_size(comm, &mpisize);
+  MPI_Comm_size(comm, &size);
 
   long N = 1;
 
@@ -20,13 +20,13 @@ int main(int argc, char** argv) {
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     int name_len;
     MPI_Get_processor_name(processor_name, &name_len);
-    printf("Rank %d/%d running on %s.\n", rank, mpisize, processor_name);
+    printf("Rank %d/%d running on %s.\n", rank, size, processor_name);
     // end of get hostname
 
     // start with the first one
     if (rank == 0) {
 
-
+	printf("I am Rank 0, will send to Rank 1 ...\n");
         int message_out = 12;
 
         int tag = message_out;
@@ -34,6 +34,10 @@ int main(int argc, char** argv) {
 
         MPI_Send(&message_out, 1, MPI_INT, send_to_rank, 999, MPI_COMM_WORLD);
 
+	// next add the wait for the end of the loop
+	int message_in;
+	MPI_Status status;
+	int receive_from_rank = rank -1;
 
     }
     else {
@@ -42,11 +46,19 @@ int main(int argc, char** argv) {
         int receive_from_rank = rank -1;
 
         MPI_Recv(&message_in, 1, MPI_INT, receive_from_rank, 999, MPI_COMM_WORLD, &status);
-        printf("Rank %d, The message is %d\n", message_in, rank);
+        printf("Rank %d, The message is %d\n", rank, message_in);
+
+	// if its not the final one
+	// will stop when rank < (3-1)
+	if (rank < (size - 1)) {
+		
+		int message_out = message_in + rank;
+		int send_to_rank = rank + 1;
+		MPI_Send(&message_out, 1, MPI_INT, send_to_rank, 999, MPI_COMM_WORLD);
+    	}
+
+
     }
-
-
-
   }
 
 
