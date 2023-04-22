@@ -50,21 +50,6 @@ int main(int argc, char** argv) {
   }
 
 
-  MPI_Barrier(comm);
-  double tt = MPI_Wtime();
-  double dot_prod = inner(N_local, x, y, comm);
-  tt = MPI_Wtime() - tt;
-  if (mpirank == 0) {
-    printf("inner-product = %f\n", dot_prod);
-    printf("time elapsed = %f\n", tt);
-
-    printf("%f GB/s\n", 2 * N * sizeof(double) / 1e9 / tt);
-    printf("%f Gflop/s\n", 2 * N / 1e9 / tt);
-  }
-
-//   free(x);
-//   free(y);
-
   MPI_Finalize();
   return 0;
 }
