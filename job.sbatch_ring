@@ -10,4 +10,4 @@
 module purge 
 module load openmpi/gcc/4.0.5 intel/19.1.2 openmpi/intel/4.0.5 
 
-mpiexec -np 3 ./int_ring
+mpiexec -np 3 ./int_ring 2

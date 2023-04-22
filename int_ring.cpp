@@ -6,11 +6,17 @@ int main(int argc, char** argv) {
   MPI_Init(&argc, &argv);
   MPI_Comm comm = MPI_COMM_WORLD;
 
+  if (argc < 2) {
+    printf("Usage: mpirun ./int_ring <n_repeats>\n");
+    abort();
+  }
+  int N = atoi(argv[1]);
+
+
   int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
-  long N = 1;
 
   for (int n=0; n<N; n++) {
 
@@ -30,7 +36,7 @@ int main(int argc, char** argv) {
         int message_out = 12;
 
         int tag = message_out;
-        int send_to_rank = rank + 1;
+        int send_to_rank = (rank + 1) % size;
 
         MPI_Send(&message_out, 1, MPI_INT, send_to_rank, 999, MPI_COMM_WORLD);
 
