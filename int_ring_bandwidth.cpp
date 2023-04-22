@@ -78,13 +78,13 @@ int main(int argc, char** argv) {
 
     } // corresponds to N loops
 
-
    //MPI_Barrier(comm);
    tt = MPI_Wtime() - tt;
-
    if (!rank) {
   	printf("Int ring bandwidth: %e GB/s \n", (size_array*N)/tt/1e9 * 1000);	   
    }
+
+   free(message);
 
   MPI_Finalize();
   return 0;
