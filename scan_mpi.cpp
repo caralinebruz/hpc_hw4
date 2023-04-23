@@ -153,6 +153,15 @@ int main(int argc, char * argv[]) {
   printf("Rank %d total offset to add: %d \n", rank, total_offset_to_add);
 
 
+  // add this total offset to your sums array
+  for (int u=0; u<length_each; u++) {
+	int mysums_prev = mysums[u];
+  	mysums[u] += total_offset_to_add;
+	printf("rank %d previous val: %d new val: %d \n", rank, mysums_prev, mysums[u]);
+  }
+
+
+
 
 
   /* timing */
