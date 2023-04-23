@@ -67,18 +67,18 @@ int main(int argc, char * argv[]) {
 	  printf("Array A values:\n");
 	  for (int i = 0; i < N; i++) {
 		  A[i] = rand() % 10 + 1;
-		  printf("A[%d] = %d \n", i, A[i]);
+		  //printf("A[%d] = %d \n", i, A[i]);
 	  }
 
 	  // send each section to the other ranks
 	  // method 1, send sequentially
 	  for (int process=1; process<world_size; process++) {
 
-	 	printf("process %d gets indices: \n", process);
+	 	//printf("process %d gets indices: \n", process);
 	        int* subarray = (int*) malloc(length_each * sizeof(int));
 		for (int i = 0; i < length_each; i++) {
 			subarray[i] = A[length_each*process + i];	
-			printf("\t %lu\n", subarray[i]);
+			//printf("\t %lu\n", subarray[i]);
 		}
 
 		// send it to the correct process
@@ -158,10 +158,10 @@ int main(int argc, char * argv[]) {
 
   if (rank == 0) {
   	// print what you received
-	printf("Rank 0, final result: \n");
-	for (int v=0; v<N; v++) {
-		printf(" %d \n", rbuf_final[v]);
-	}
+	printf("Rank 0, finally done: \n");
+	//for (int v=0; v<N; v++) {
+	//	printf(" %d \n", rbuf_final[v]);
+	//}
   }
 
   /* timing */
