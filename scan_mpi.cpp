@@ -160,6 +160,32 @@ int main(int argc, char * argv[]) {
 	printf("rank %d previous val: %d new val: %d \n", rank, mysums_prev, mysums[u]);
   }
 
+  // barrier here to wait for everyone
+  MPI_Barrier(comm);
+
+
+  // gather everyones final arrays
+  int* sendarray_final = (int*) malloc(length_each * sizeof(int));
+
+  // only the root gathers the arrays from everyone
+  int* rbuf_final;
+
+  if (rank == 0) {
+
+	  // allocate a new array for the whole thing, same size as A
+	  rbuf_final = (int*) malloc(N * sizeof(int));
+  }
+  MPI_Gather(mysums, length_each, MPI_INT, rbuf_final, length_each, MPI_INT, 0, comm);
+
+  if (rank == 0) {
+  
+  	// print what you received
+	printf("Rank 0, final result: \n");
+	for (int v=0; v<N; v++) {
+		printf(" %d \n", rbuf_final[v]);
+	}
+	
+  }
 
 
 
