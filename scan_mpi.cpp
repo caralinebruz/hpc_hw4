@@ -41,6 +41,11 @@ int main(int argc, char * argv[]) {
 
 
   // split up the array into world_size sections
+  int* mysums = (int*) malloc(length_each * sizeof(int));
+  mysums[0] = 0;
+
+  int offset = 0;
+
 
   if (rank == 0) {
 
@@ -71,17 +76,15 @@ int main(int argc, char * argv[]) {
 	  }
 
 
-	  for (int q=0; q<length_each; q++) {
-	  	printf("Rank 0, process number A[%d]: %d \n", q, A[q]);
-	  }
+	  //for (int q=0; q<length_each; q++) {
+	 // 	printf("Rank 0, process number A[%d]: %d \n", q, A[q]);
+	  //}
 
 
 	  // do your own work
-	  int offset = 0;
-	  int partial_sum = 0;
 	  
-	  int* mysums = (int*) malloc(length_each * sizeof(int));
-	  mysums[0] = 0;
+	  // int* mysums = (int*) malloc(length_each * sizeof(int));
+	  // mysums[0] = 0;
 
 	  for (int y=1; y<length_each+1; y++){
 
@@ -105,9 +108,8 @@ int main(int argc, char * argv[]) {
 
 	MPI_Recv(sub, length_each, MPI_INT, receive_from_rank, rank, MPI_COMM_WORLD, &status);
 
-	int offset = 0;
-	int* mysums = (int*) malloc(length_each * sizeof(int));
-	mysums[0] = 0;
+	// int* mysums = (int*) malloc(length_each * sizeof(int));
+	// mysums[0] = 0;
 
 	for (int y=1; y<length_each+1; y++) {
 		mysums[y] = mysums[y-1] + sub[y-1];
@@ -117,12 +119,28 @@ int main(int argc, char * argv[]) {
 
 	printf(" rank %d offset: %d\n", rank, offset);
 
-	// send it back
-
 	free(sub);
+
+	// send it back
+	//
+	
+
+	// free(sub);
   }
 
+  // when they are done with their subarray processing, then they can allgather
+  // create a new buffer for send receive for the offsets
 
+  int number_of_ints = 1;
+  int* sendarray = (int*) malloc(number_of_ints * sizeof(int));
+  sendarray[0] = offset;
+  int* rbuf = (int*) malloc(world_size* number_of_ints * sizeof(int));
+
+  MPI_Allgather( sendarray, number_of_ints, MPI_INT, rbuf, number_of_ints, MPI_INT, comm); 
+  for (int s=0; s<world_size; s++) {
+	  printf("Rank %d receive buffer [%d]\n", rank, rbuf[s]);
+  
+  }
 
 
 
@@ -134,6 +152,7 @@ int main(int argc, char * argv[]) {
     printf("Time elapsed is %f seconds.\n", elapsed);
   }
 
+  free(mysums);
   // do some error checking late
 
   MPI_Finalize();
