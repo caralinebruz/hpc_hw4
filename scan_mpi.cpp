@@ -31,8 +31,17 @@ int main(int argc, char * argv[]) {
   printf("Rank %d/%d running on %s.\n", rank, world_size, processor_name);
 
   // read N from inputs
-  long N = 20;
-  sscanf(argv[1], "%d", &N);
+  // long N;
+  // sscanf(argv[1], "%d", &N);
+  int N = atoi(argv[1]);
+
+  // check that the sizes work out
+  if (N % world_size != 0) {
+
+	  printf("N must be a multiple of number of processors. abort.\n");
+	  abort();
+  }
+  
 
   // set up the data
   int length_each = N/world_size;
@@ -172,11 +181,22 @@ int main(int argc, char * argv[]) {
 	  double seq_elapsed = MPI_Wtime() - tt_seq;
 	  printf("Sequential Version:: Time elapsed is %f seconds.\n", seq_elapsed);
 
+	  //actual result
+	  //for (int w=0; w<N; w++) {
+	  //	  printf("actual[%d]:%d \n", w, B0[w]);
+	  //}
 
 	  // check error
 	  int err = 0;
 	  for (int i = 0; i < N; i++) err = std::max(err, std::abs(B0[i] - rbuf_final[i]));
 	  printf("error = %ld\n", err);
+
+
+	      // for debugging purposes
+	   for (int i = 0; i < N; i++) {
+	     printf("B0[%lu], rbuf[i]-> %lu %lu \n", i, B0[i], rbuf_final[i]);
+	   }
+
 
 	  free(B0);
 	  free(A);
