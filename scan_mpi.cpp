@@ -46,7 +46,12 @@ int main(int argc, char * argv[]) {
 
 	  // create a array
 	  int* A = (int*) malloc(N * sizeof(int));
-	  for (int i = 0; i < N; i++) A[i] = i;
+
+	  printf("Array A values:\n");
+	  for (int i = 0; i < N; i++) {
+		  A[i] = rand() % 10 + 1;
+		  printf("A[%d] = %d \n", i, A[i]);
+	  }
 
 	  // send each section to the other ranks
 	  // method 1, send sequentially
@@ -59,29 +64,35 @@ int main(int argc, char * argv[]) {
 			printf("\t %lu\n", subarray[i]);
 		}
 
-        	//for (int j=0; j<length_each; j++) {
-               // 	printf("\t\t Rank %d sending %d\n ", rank, subarray[j]);
-        	//}
-
 		// send it to the correct process
 		int send_to_rank = process;
 		MPI_Send(subarray, length_each, MPI_INT, send_to_rank, send_to_rank, MPI_COMM_WORLD);
 		free(subarray);
 	  }
 
-	  // method 2, use MPI SCATTER
-	  // Create a buffer that will hold a subset of the random numbers
-	  // int *sub_rand_nums = (int*) malloc(sizeof(int) * length_each);
-	  // MPI_Scatter(A, length_each, MPI_INT, sub_rand_nums, length_each, MPI_INT, 0, MPI_COMM_WORLD);
+
+	  for (int q=0; q<length_each; q++) {
+	  	printf("Rank 0, process number A[%d]: %d \n", q, A[q]);
+	  }
+
 
 	  // do your own work
 	  int offset = 0;
 	  int partial_sum = 0;
-	  for (int y=0; y<length_each; y++){
-		partial_sum += A[y];
+	  
+	  int* mysums = (int*) malloc(length_each * sizeof(int));
+	  mysums[0] = 0;
+
+	  for (int y=1; y<length_each+1; y++){
+
+		//	printf("A[%d-1] \n",y, A[y-1]); 
+		// 	printf(" %d + %d \n", mysums[y-1], A[y-1]);
+
+		mysums[y] = mysums[y-1] + A[y-1];
+		// printf(" rank 0 mysums[%d] = %d \n", y, mysums[y]);
+		offset = mysums[y];
 	  }
-	  printf("Partial sum for rank 0: %d\n", partial_sum);
-	  offset = partial_sum;
+	  printf("  rank 0 offset %d \n", offset);
 
 	  // then wait for them to respond
   }
@@ -93,17 +104,19 @@ int main(int argc, char * argv[]) {
 	int* sub = (int*) malloc(length_each * sizeof(int));
 
 	MPI_Recv(sub, length_each, MPI_INT, receive_from_rank, rank, MPI_COMM_WORLD, &status);
-	printf("Received from rank 0:\n");
 
 	int offset = 0;
-	int partial_sum = 0;
-	for (int j=0; j<length_each; j++) {
-		partial_sum += sub[j];
-		printf("\t\t Rank %d received %d\n ", rank, sub[j]);
-		
+	int* mysums = (int*) malloc(length_each * sizeof(int));
+	mysums[0] = 0;
+
+	for (int y=1; y<length_each+1; y++) {
+		mysums[y] = mysums[y-1] + sub[y-1];
+		offset = mysums[y];
+		printf("Rank %d, processing subvalue %d \n", rank, sub[y-1]);	
 	}
-	offset = partial_sum;
-	// do your work
+
+	printf(" rank %d offset: %d\n", rank, offset);
+
 	// send it back
 
 	free(sub);
