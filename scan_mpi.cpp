@@ -49,6 +49,7 @@ int main(int argc, char * argv[]) {
 	  for (int i = 0; i < N; i++) A[i] = i;
 
 	  // send each section to the other ranks
+	  // method 1, send sequentially
 	  for (int process=1; process<world_size; process++) {
 
 	 	printf("process %d gets indices: \n", process);
@@ -58,9 +59,9 @@ int main(int argc, char * argv[]) {
 			printf("\t %lu\n", subarray[i]);
 		}
 
-        	for (int j=0; j<length_each; j++) {
-                	printf("\t\t Rank %d sending %d\n ", rank, subarray[j]);
-        	}
+        	//for (int j=0; j<length_each; j++) {
+               // 	printf("\t\t Rank %d sending %d\n ", rank, subarray[j]);
+        	//}
 
 		// send it to the correct process
 		int send_to_rank = process;
@@ -68,8 +69,20 @@ int main(int argc, char * argv[]) {
 		free(subarray);
 	  }
 
+	  // method 2, use MPI SCATTER
+	  // Create a buffer that will hold a subset of the random numbers
+	  // int *sub_rand_nums = (int*) malloc(sizeof(int) * length_each);
+	  // MPI_Scatter(A, length_each, MPI_INT, sub_rand_nums, length_each, MPI_INT, 0, MPI_COMM_WORLD);
+
 	  // do your own work
-	  //
+	  int offset = 0;
+	  int partial_sum = 0;
+	  for (int y=0; y<length_each; y++){
+		partial_sum += A[y];
+	  }
+	  printf("Partial sum for rank 0: %d\n", partial_sum);
+	  offset = partial_sum;
+
 	  // then wait for them to respond
   }
   else {
@@ -78,15 +91,18 @@ int main(int argc, char * argv[]) {
 	MPI_Status status;
 
 	int* sub = (int*) malloc(length_each * sizeof(int));
-	//static int buffer[length_each];
 
 	MPI_Recv(sub, length_each, MPI_INT, receive_from_rank, rank, MPI_COMM_WORLD, &status);
 	printf("Received from rank 0:\n");
-	for (int j=0; j<length_each; j++) {
 
+	int offset = 0;
+	int partial_sum = 0;
+	for (int j=0; j<length_each; j++) {
+		partial_sum += sub[j];
 		printf("\t\t Rank %d received %d\n ", rank, sub[j]);
 		
 	}
+	offset = partial_sum;
 	// do your work
 	// send it back
 
