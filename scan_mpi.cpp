@@ -4,6 +4,17 @@
 #include <string.h>
 
 
+// Scan A array and write result into prefix_sum array;
+// use long data type to avoid overflow
+void scan_seq(int* prefix_sum, const int* A, int n) {
+  if (n == 0) return;
+  prefix_sum[0] = 0;
+
+  for (int i = 1; i < n; i++) {
+    prefix_sum[i] = prefix_sum[i-1] + A[i-1];
+  }
+}
+
 int main(int argc, char * argv[]) {
   int rank, world_size;
   MPI_Status status, status1;
@@ -46,11 +57,13 @@ int main(int argc, char * argv[]) {
 
   int offset = 0;
 
+  int* A;
+
 
   if (rank == 0) {
 
 	  // create a array
-	  int* A = (int*) malloc(N * sizeof(int));
+	  A = (int*) malloc(N * sizeof(int));
 
 	  printf("Array A values:\n");
 	  for (int i = 0; i < N; i++) {
@@ -178,27 +191,42 @@ int main(int argc, char * argv[]) {
   MPI_Gather(mysums, length_each, MPI_INT, rbuf_final, length_each, MPI_INT, 0, comm);
 
   if (rank == 0) {
-  
   	// print what you received
 	printf("Rank 0, final result: \n");
 	for (int v=0; v<N; v++) {
 		printf(" %d \n", rbuf_final[v]);
 	}
-	
   }
 
-
-
-
+  // if the rank is 0, should have all the results. end timing and time the sequential version.
   /* timing */
   MPI_Barrier(MPI_COMM_WORLD);
   double elapsed = MPI_Wtime() - tt;
   if (0 == rank) {
-    printf("Time elapsed is %f seconds.\n", elapsed);
+    printf("MPI Version:: Time elapsed is %f seconds.\n", elapsed);
   }
 
   free(mysums);
+
   // do some error checking late
+  double tt_seq = MPI_Wtime();
+  if (rank == 0) {
+	  int* B0 = (int*) malloc(N * sizeof(int));
+	  for (int i = 0; i < N; i++) B0[i] = 0;
+	  scan_seq(B0, A, N);
+	  double seq_elapsed = MPI_Wtime() - tt_seq;
+	  printf("Sequential Version:: Time elapsed is %f seconds.\n", seq_elapsed);
+
+
+	  // check error
+	  int err = 0;
+	  for (int i = 0; i < N; i++) err = std::max(err, std::abs(B0[i] - rbuf_final[i]));
+	  printf("error = %ld\n", err);
+
+	  free(B0);
+	  free(A);
+  }
+
 
   MPI_Finalize();
   return 0;
