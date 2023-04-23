@@ -35,14 +35,6 @@ int main(int argc, char * argv[]) {
   sscanf(argv[1], "%d", &N);
 
   // set up the data
-  //long* A = (long*) malloc(N * sizeof(long));
-  //long* B1 = (long*) malloc(N * sizeof(long));
-
-  // for (long i = 0; i < N; i++) A[i] = rand();
-  //for (long i = 0; i < N; i++) A[i] = i;
-  //for (long i = 0; i < N; i++) B1[i] = 0;
-
-
   int length_each = N/world_size;
   printf("length each: %d \n", length_each);
   
@@ -54,11 +46,8 @@ int main(int argc, char * argv[]) {
   // split up the array into world_size sections
   int* mysums = (int*) malloc(length_each * sizeof(int));
   mysums[0] = 0;
-
   int offset = 0;
-
   int* A;
-
 
   if (rank == 0) {
 	  printf("Using N=%d \n", N);
@@ -89,29 +78,12 @@ int main(int argc, char * argv[]) {
 		free(subarray);
 	  }
 
-
-	  //for (int q=0; q<length_each; q++) {
-	 // 	printf("Rank 0, process number A[%d]: %d \n", q, A[q]);
-	  //}
-
-
 	  // do your own work
-	  
-	  // int* mysums = (int*) malloc(length_each * sizeof(int));
-	  // mysums[0] = 0;
-
 	  for (int y=1; y<length_each+1; y++){
-
-		//	printf("A[%d-1] \n",y, A[y-1]); 
-		// 	printf(" %d + %d \n", mysums[y-1], A[y-1]);
-
 		mysums[y] = mysums[y-1] + A[y-1];
-		// printf(" rank 0 mysums[%d] = %d \n", y, mysums[y]);
 		offset = mysums[y];
 	  }
 	  printf("  rank 0 offset %d \n", offset);
-
-	  // then wait for them to respond
   }
   else {
 	// receive your chunk
@@ -119,11 +91,7 @@ int main(int argc, char * argv[]) {
 	MPI_Status status;
 
 	int* sub = (int*) malloc(length_each * sizeof(int));
-
 	MPI_Recv(sub, length_each, MPI_INT, receive_from_rank, rank, MPI_COMM_WORLD, &status);
-
-	// int* mysums = (int*) malloc(length_each * sizeof(int));
-	// mysums[0] = 0;
 
 	for (int y=1; y<length_each+1; y++) {
 		mysums[y] = mysums[y-1] + sub[y-1];
@@ -132,14 +100,7 @@ int main(int argc, char * argv[]) {
 	}
 
 	printf(" rank %d offset: %d\n", rank, offset);
-
 	free(sub);
-
-	// send it back
-	//
-	
-
-	// free(sub);
   }
 
   // when they are done with their subarray processing, then they can allgather
@@ -174,10 +135,6 @@ int main(int argc, char * argv[]) {
 	printf("rank %d previous val: %d new val: %d \n", rank, mysums_prev, mysums[u]);
   }
 
-  // barrier here to wait for everyone
-  // MPI_Barrier(comm);
-
-
   // gather everyones final arrays
   int* sendarray_final = (int*) malloc(length_each * sizeof(int));
 
@@ -185,7 +142,6 @@ int main(int argc, char * argv[]) {
   int* rbuf_final;
 
   if (rank == 0) {
-
 	  // allocate a new array for the whole thing, same size as A
 	  rbuf_final = (int*) malloc(N * sizeof(int));
   }
@@ -199,10 +155,7 @@ int main(int argc, char * argv[]) {
 	}
   }
 
-  // if the rank is 0, should have all the results. end timing and time the sequential version.
   /* timing */
-  // MPI_Barrier(MPI_COMM_WORLD);
-
   double elapsed = MPI_Wtime() - tt;
   if (0 == rank) {
     printf("MPI Version:: Time elapsed is %f seconds.\n", elapsed);
@@ -228,7 +181,6 @@ int main(int argc, char * argv[]) {
 	  free(B0);
 	  free(A);
   }
-
 
   MPI_Finalize();
   return 0;
