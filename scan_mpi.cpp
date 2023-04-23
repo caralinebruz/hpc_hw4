@@ -61,6 +61,7 @@ int main(int argc, char * argv[]) {
 
 
   if (rank == 0) {
+	  printf("Using N=%d \n", N);
 
 	  // create a array
 	  A = (int*) malloc(N * sizeof(int));
@@ -174,7 +175,7 @@ int main(int argc, char * argv[]) {
   }
 
   // barrier here to wait for everyone
-  MPI_Barrier(comm);
+  // MPI_Barrier(comm);
 
 
   // gather everyones final arrays
@@ -200,7 +201,8 @@ int main(int argc, char * argv[]) {
 
   // if the rank is 0, should have all the results. end timing and time the sequential version.
   /* timing */
-  MPI_Barrier(MPI_COMM_WORLD);
+  // MPI_Barrier(MPI_COMM_WORLD);
+
   double elapsed = MPI_Wtime() - tt;
   if (0 == rank) {
     printf("MPI Version:: Time elapsed is %f seconds.\n", elapsed);
