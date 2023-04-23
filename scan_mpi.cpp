@@ -138,9 +138,19 @@ int main(int argc, char * argv[]) {
 
   MPI_Allgather( sendarray, number_of_ints, MPI_INT, rbuf, number_of_ints, MPI_INT, comm); 
   for (int s=0; s<world_size; s++) {
-	  printf("Rank %d receive buffer [%d]\n", rank, rbuf[s]);
-  
+	  printf("Rank %d receive buffer [%d]\n", rank, rbuf[s]); 
   }
+
+  // now that you have everyone's offset, find the total offset you should add to your onw
+  // by summing offsets of processors with a lower rank than you
+  int total_offset_to_add = 0;
+  for (int t=0; t<world_size; t++) {
+  
+  	if (t < rank) {
+		total_offset_to_add += rbuf[t];
+	}
+  }
+  printf("Rank %d total offset to add: %d \n", rank, total_offset_to_add);
 
 
 
